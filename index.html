@@ -3,7 +3,14 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>PT Board Prep — Flashcards</title>
+<meta name="theme-color" content="#7c6dfa" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+<meta name="apple-mobile-web-app-title" content="HAAD" />
+<meta name="mobile-web-app-capable" content="yes" />
+<link rel="manifest" href="manifest.json" />
+<link rel="apple-touch-icon" href="icon-192.png" />
+<title>HAAD</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -109,8 +116,8 @@
 <!-- AUTH -->
 <div id="auth-screen">
   <div class="auth-card">
-    <h1>PT Board Prep <span style="color:var(--accent2)">✦</span></h1>
-    <p>50 flashcards · answers sync across all your devices</p>
+    <h1>HAAD <span style="color:var(--accent2)">✦</span></h1>
+    <p>100 flashcards · answers sync across all your devices</p>
     <div class="auth-tabs">
       <div class="auth-tab active" id="tab-login" onclick="switchTab('login')">Sign in</div>
       <div class="auth-tab" id="tab-signup" onclick="switchTab('signup')">Create account</div>
@@ -125,7 +132,7 @@
 <!-- APP -->
 <div id="app-screen">
   <header>
-    <div class="logo">PT Prep <span>✦</span></div>
+    <div class="logo">HAAD <span>✦</span></div>
     <div class="user-row">
       <span class="user-email" id="user-email-lbl"></span>
       <button class="btn-ghost" onclick="signOut()">Sign out</button>
@@ -444,6 +451,18 @@ function render() {
       +'</div>'
       +'</div>';
   }).join('');
+}
+</script>
+
+<script>
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', function() {
+    navigator.serviceWorker.register('sw.js').then(function(reg) {
+      console.log('SW registered:', reg.scope);
+    }).catch(function(err) {
+      console.log('SW registration failed:', err);
+    });
+  });
 }
 </script>
 </body>
