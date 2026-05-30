@@ -34,6 +34,8 @@ body { min-height:100%; overscroll-behavior:none; }
 #auth-screen {
   min-height:100dvh; display:flex; align-items:center; justify-content:center; padding:1.5rem;
   background:radial-gradient(ellipse at 60% 20%,rgba(124,109,250,0.12) 0%,transparent 60%);
+  position:relative;
+  z-index:10;
 }
 .auth-wrap { width:100%; max-width:420px; }
 .auth-logo { display:flex; align-items:center; gap:12px; margin-bottom:2rem; }
@@ -63,8 +65,22 @@ body { min-height:100%; overscroll-behavior:none; }
 .auth-msg.success { color:var(--green); }
 
 /* APP SHELL */
-#app-screen { display:none; min-height:100dvh; flex-direction:column; }
-#app-screen.active { display:flex; }
+#app-screen {
+  display:none;
+  min-height:100dvh;
+  flex-direction:column;
+  /* Ensure hidden app-screen never intercepts taps on auth screen */
+  pointer-events:none;
+  visibility:hidden;
+  position:relative;
+  z-index:1;
+}
+#app-screen.active {
+  display:flex;
+  pointer-events:auto;
+  visibility:visible;
+}
+#app-screen.active .bottom-nav { display:flex; }
 
 .app-header {
   position:sticky; top:0; z-index:200;
@@ -131,6 +147,7 @@ body { min-height:100%; overscroll-behavior:none; }
 
 /* BOTTOM NAV */
 .bottom-nav {
+  display:none; /* hidden until app is active */
   position:fixed; bottom:0; left:0; right:0; z-index:200;
   background:rgba(13,13,16,0.94); backdrop-filter:blur(16px);
   -webkit-backdrop-filter:blur(16px);
