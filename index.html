@@ -380,15 +380,32 @@ var revFilter   = false;
 var currentTab  = 'login';
 var syncTimer;
 
-/* BOOT */
-window.addEventListener('load', function() {
-  sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+/* BOOT
+   Wire UI events immediately on DOMContentLoaded so buttons work even
+   before the Supabase network request finishes. Supabase client is
+   initialised separately once the library script has loaded.
+*/
+document.addEventListener('DOMContentLoaded', function() {
 
-  /* wire up auth tabs via data attribute — avoids inline onclick escaping issues */
+  /* Auth tabs */
   document.querySelectorAll('.auth-tab').forEach(function(el) {
     el.addEventListener('click', function() { switchTab(this.dataset.tab); });
   });
-  document.getElementById('auth-btn').addEventListener('click', doAuth);
+
+  /* Sign-in button — bind both click AND touchend so mobile Safari never misses it */
+  var authBtn = document.getElementById('auth-btn');
+  var authBtnTouched = false;
+  authBtn.addEventListener('touchend', function(e) {
+    e.preventDefault();          /* prevent the 300ms ghost click */
+    authBtnTouched = true;
+    doAuth();
+    setTimeout(function(){ authBtnTouched = false; }, 600);
+  });
+  authBtn.addEventListener('click', function() {
+    if (!authBtnTouched) doAuth();
+  });
+
+  /* All other buttons */
   document.getElementById('signout-btn').addEventListener('click', signOut);
   document.getElementById('search').addEventListener('input', render);
   document.getElementById('reveal-btn').addEventListener('click', toggleRevealAll);
@@ -398,6 +415,11 @@ window.addEventListener('load', function() {
   document.getElementById('nav-starred').addEventListener('click', function(){ setNav('starred'); });
   document.getElementById('nav-revealed').addEventListener('click', function(){ setNav('revealed'); });
   document.getElementById('nav-shuffle').addEventListener('click', function(){ shuffleCards(); highlightNavBtn('nav-shuffle'); });
+});
+
+/* Supabase init — runs once the CDN script has fully loaded */
+window.addEventListener('load', function() {
+  sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
   sb.auth.getSession().then(function(res) {
     var session = res.data && res.data.session;
