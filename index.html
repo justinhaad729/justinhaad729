@@ -4,239 +4,125 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>PT Board Prep — Flashcards</title>
-
-<!-- ── SUPABASE ── Replace these two values with your own from supabase.com ── -->
-<script>
-  const SUPABASE_URL = "https://ndhqnhiiapquykphclmo.supabase.co";
-  const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5kaHFuaGlpYXBxdXlrcGhjbG1vIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODAxMjE3NDEsImV4cCI6MjA5NTY5Nzc0MX0.Qz1VdIQMMbjSATQwSdds3HvwyQ1xiWgD6UJnxS8b75E";
-</script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;1,9..40,300&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet" />
-
 <style>
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
   :root {
-    --bg:       #0f0f11;
-    --bg2:      #18181c;
-    --bg3:      #222228;
-    --border:   #2e2e38;
-    --border2:  #3e3e4e;
-    --text:     #e8e8f0;
-    --muted:    #7a7a90;
-    --accent:   #7c6dfa;
-    --accent2:  #a996ff;
-    --green:    #34d89b;
-    --amber:    #f5a623;
-    --red:      #f05e5e;
-    --font:     'DM Sans', sans-serif;
-    --mono:     'DM Mono', monospace;
-    --radius:   10px;
-    --radius-lg:16px;
+    --bg:#0f0f11; --bg2:#18181c; --bg3:#222228;
+    --border:#2e2e38; --border2:#3e3e4e;
+    --text:#e8e8f0; --muted:#7a7a90;
+    --accent:#7c6dfa; --accent2:#a996ff;
+    --green:#34d89b; --amber:#f5a623; --red:#f05e5e;
+    --font:'DM Sans',sans-serif; --mono:'DM Mono',monospace;
+    --radius:10px; --radius-lg:16px;
   }
+  html { font-family:var(--font); font-size:15px; background:var(--bg); color:var(--text); }
+  body { min-height:100vh; }
 
-  html { font-family: var(--font); font-size: 15px; background: var(--bg); color: var(--text); }
-  body { min-height: 100vh; }
+  /* AUTH */
+  #auth-screen { min-height:100vh; display:flex; align-items:center; justify-content:center; padding:2rem; }
+  .auth-card { background:var(--bg2); border:1px solid var(--border); border-radius:var(--radius-lg); padding:2.5rem 2rem; width:100%; max-width:400px; }
+  .auth-card h1 { font-size:1.5rem; font-weight:500; margin-bottom:4px; letter-spacing:-0.02em; }
+  .auth-card p { color:var(--muted); font-size:0.875rem; margin-bottom:1.75rem; }
+  .auth-tabs { display:flex; margin-bottom:1.5rem; border-bottom:1px solid var(--border); }
+  .auth-tab { flex:1; text-align:center; padding:0.6rem 0; cursor:pointer; font-size:0.875rem; color:var(--muted); border-bottom:2px solid transparent; margin-bottom:-1px; transition:color .15s,border-color .15s; }
+  .auth-tab.active { color:var(--accent2); border-color:var(--accent); }
+  .field { margin-bottom:1rem; }
+  .field label { display:block; font-size:0.8rem; color:var(--muted); margin-bottom:6px; }
+  .field input { width:100%; padding:0.6rem 0.8rem; background:var(--bg3); border:1px solid var(--border); border-radius:var(--radius); color:var(--text); font-family:var(--font); font-size:0.9rem; outline:none; transition:border-color .15s; }
+  .field input:focus { border-color:var(--accent); }
+  .btn-primary { width:100%; padding:0.7rem; background:var(--accent); border:none; border-radius:var(--radius); color:#fff; font-family:var(--font); font-size:0.9rem; font-weight:500; cursor:pointer; transition:opacity .15s; }
+  .btn-primary:hover { opacity:0.88; }
+  .btn-primary:disabled { opacity:0.5; cursor:default; }
+  .auth-msg { margin-top:0.75rem; font-size:0.8rem; text-align:center; min-height:1.2em; }
+  .auth-msg.error { color:var(--red); }
+  .auth-msg.success { color:var(--green); }
 
-  /* ── AUTH SCREEN ── */
-  #auth-screen {
-    min-height: 100vh;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 2rem;
-  }
-  .auth-card {
-    background: var(--bg2);
-    border: 1px solid var(--border);
-    border-radius: var(--radius-lg);
-    padding: 2.5rem 2rem;
-    width: 100%;
-    max-width: 400px;
-  }
-  .auth-card h1 {
-    font-size: 1.5rem;
-    font-weight: 500;
-    margin-bottom: 4px;
-    letter-spacing: -0.02em;
-  }
-  .auth-card p { color: var(--muted); font-size: 0.875rem; margin-bottom: 1.75rem; }
-  .auth-tabs { display: flex; gap: 0; margin-bottom: 1.5rem; border-bottom: 1px solid var(--border); }
-  .auth-tab {
-    flex: 1; text-align: center; padding: 0.6rem 0; cursor: pointer;
-    font-size: 0.875rem; color: var(--muted); border-bottom: 2px solid transparent;
-    margin-bottom: -1px; transition: color 0.15s, border-color 0.15s;
-  }
-  .auth-tab.active { color: var(--accent2); border-color: var(--accent); }
-  .field { margin-bottom: 1rem; }
-  .field label { display: block; font-size: 0.8rem; color: var(--muted); margin-bottom: 6px; }
-  .field input {
-    width: 100%; padding: 0.6rem 0.8rem;
-    background: var(--bg3); border: 1px solid var(--border);
-    border-radius: var(--radius); color: var(--text); font-family: var(--font); font-size: 0.9rem;
-    outline: none; transition: border-color 0.15s;
-  }
-  .field input:focus { border-color: var(--accent); }
-  .btn-primary {
-    width: 100%; padding: 0.7rem; background: var(--accent);
-    border: none; border-radius: var(--radius); color: #fff;
-    font-family: var(--font); font-size: 0.9rem; font-weight: 500;
-    cursor: pointer; transition: opacity 0.15s;
-  }
-  .btn-primary:hover { opacity: 0.88; }
-  .btn-primary:disabled { opacity: 0.5; cursor: default; }
-  .auth-msg { margin-top: 0.75rem; font-size: 0.8rem; text-align: center; min-height: 1.2em; }
-  .auth-msg.error { color: var(--red); }
-  .auth-msg.success { color: var(--green); }
+  /* APP */
+  #app-screen { display:none; min-height:100vh; }
+  header { position:sticky; top:0; z-index:100; background:rgba(15,15,17,0.85); backdrop-filter:blur(12px); border-bottom:1px solid var(--border); padding:0.9rem 1.5rem; display:flex; align-items:center; justify-content:space-between; gap:1rem; }
+  .logo { font-size:1rem; font-weight:500; letter-spacing:-0.02em; }
+  .logo span { color:var(--accent2); }
+  .user-row { display:flex; align-items:center; gap:10px; }
+  .user-email { font-size:0.78rem; color:var(--muted); font-family:var(--mono); max-width:180px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .btn-ghost { padding:0.35rem 0.75rem; background:transparent; border:1px solid var(--border2); border-radius:var(--radius); color:var(--muted); font-family:var(--font); font-size:0.78rem; cursor:pointer; transition:color .15s; }
+  .btn-ghost:hover { color:var(--text); }
+  main { max-width:780px; margin:0 auto; padding:1.75rem 1.25rem 4rem; }
 
-  /* ── APP SHELL ── */
-  #app-screen { display: none; min-height: 100vh; }
+  /* STATS */
+  .stats { display:grid; grid-template-columns:repeat(4,1fr); gap:10px; margin-bottom:1.5rem; }
+  .stat { background:var(--bg2); border:1px solid var(--border); border-radius:var(--radius); padding:0.85rem 1rem; }
+  .stat .lbl { font-size:0.7rem; color:var(--muted); text-transform:uppercase; letter-spacing:0.06em; margin-bottom:4px; }
+  .stat .val { font-size:1.5rem; font-weight:500; font-family:var(--mono); color:var(--text); }
+  .stat .val.accent { color:var(--accent2); }
+  .stat .val.green  { color:var(--green); }
+  .stat .val.amber  { color:var(--amber); }
 
-  header {
-    position: sticky; top: 0; z-index: 100;
-    background: rgba(15,15,17,0.85); backdrop-filter: blur(12px);
-    border-bottom: 1px solid var(--border);
-    padding: 0.9rem 1.5rem;
-    display: flex; align-items: center; justify-content: space-between; gap: 1rem;
-  }
-  .logo { font-size: 1rem; font-weight: 500; letter-spacing: -0.02em; }
-  .logo span { color: var(--accent2); }
-  .user-row { display: flex; align-items: center; gap: 10px; }
-  .user-email { font-size: 0.78rem; color: var(--muted); font-family: var(--mono); max-width: 180px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-  .btn-ghost {
-    padding: 0.35rem 0.75rem; background: transparent;
-    border: 1px solid var(--border2); border-radius: var(--radius);
-    color: var(--muted); font-family: var(--font); font-size: 0.78rem;
-    cursor: pointer; transition: border-color 0.15s, color 0.15s;
-  }
-  .btn-ghost:hover { border-color: var(--border2); color: var(--text); }
+  /* TOOLBAR */
+  .toolbar { display:flex; gap:8px; flex-wrap:wrap; margin-bottom:1.25rem; }
+  .toolbar input { flex:1; min-width:160px; height:36px; padding:0 12px; background:var(--bg2); border:1px solid var(--border); border-radius:var(--radius); color:var(--text); font-family:var(--font); font-size:0.875rem; outline:none; transition:border-color .15s; }
+  .toolbar input:focus { border-color:var(--accent); }
+  .tbtn { height:36px; padding:0 13px; background:var(--bg2); border:1px solid var(--border); border-radius:var(--radius); color:var(--muted); font-family:var(--font); font-size:0.82rem; cursor:pointer; display:inline-flex; align-items:center; gap:6px; white-space:nowrap; transition:border-color .15s,color .15s,background .15s; }
+  .tbtn:hover { border-color:var(--border2); color:var(--text); }
+  .tbtn.on { border-color:var(--accent); color:var(--accent2); background:rgba(124,109,250,0.08); }
+  .tbtn svg { width:14px; height:14px; stroke:currentColor; fill:none; stroke-width:2; stroke-linecap:round; stroke-linejoin:round; }
 
-  main { max-width: 780px; margin: 0 auto; padding: 1.75rem 1.25rem 4rem; }
+  /* CARDS */
+  #card-list { display:flex; flex-direction:column; gap:8px; }
+  .fc { background:var(--bg2); border:1px solid var(--border); border-radius:var(--radius-lg); padding:1.1rem 1.2rem; cursor:pointer; transition:border-color .15s,background .15s; }
+  .fc:hover { border-color:var(--border2); background:var(--bg3); }
+  .fc.revealed { border-color:rgba(124,109,250,0.35); }
+  .fc-top { display:flex; gap:10px; align-items:flex-start; }
+  .fc-num { font-size:0.72rem; color:var(--muted); font-family:var(--mono); min-width:28px; padding-top:2px; }
+  .fc-q { font-size:0.9rem; color:var(--text); line-height:1.65; flex:1; }
+  .star-btn { background:none; border:none; cursor:pointer; color:var(--muted); padding:2px; flex-shrink:0; transition:color .15s; line-height:1; }
+  .star-btn:hover { color:var(--amber); }
+  .star-btn.on { color:var(--amber); }
+  .star-btn svg { width:15px; height:15px; stroke:currentColor; fill:none; stroke-width:2; stroke-linecap:round; stroke-linejoin:round; }
+  .star-btn.on svg { fill:var(--amber); }
+  .fc-ans { margin-top:10px; padding-top:10px; border-top:1px solid var(--border); display:flex; align-items:flex-start; gap:10px; }
+  .ans-lbl { font-size:0.68rem; color:var(--muted); text-transform:uppercase; letter-spacing:0.06em; padding-top:2px; white-space:nowrap; }
+  .ans-text { font-size:0.9rem; font-weight:500; color:var(--accent2); flex:1; filter:blur(7px); user-select:none; transition:filter .25s; }
+  .fc.revealed .ans-text { filter:none; user-select:text; }
+  .tap-hint { font-size:0.72rem; color:var(--muted); white-space:nowrap; padding-top:2px; }
+  .fc.revealed .tap-hint { display:none; }
+  .empty { text-align:center; padding:3rem 1rem; color:var(--muted); font-size:0.875rem; }
 
-  /* ── STATS ── */
-  .stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 1.5rem; }
-  .stat {
-    background: var(--bg2); border: 1px solid var(--border);
-    border-radius: var(--radius); padding: 0.85rem 1rem;
-  }
-  .stat .lbl { font-size: 0.7rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 4px; }
-  .stat .val { font-size: 1.5rem; font-weight: 500; font-family: var(--mono); color: var(--text); }
-  .stat .val.accent { color: var(--accent2); }
-  .stat .val.green  { color: var(--green); }
-  .stat .val.amber  { color: var(--amber); }
+  /* SYNC */
+  #sync-status { position:fixed; bottom:1.25rem; right:1.25rem; font-size:0.75rem; font-family:var(--mono); background:var(--bg2); border:1px solid var(--border); border-radius:999px; padding:0.35rem 0.85rem; color:var(--muted); opacity:0; transition:opacity .3s; pointer-events:none; }
+  #sync-status.show { opacity:1; }
+  #sync-status.ok  { color:var(--green); border-color:rgba(52,216,155,0.3); }
+  #sync-status.err { color:var(--red);   border-color:rgba(240,94,94,0.3); }
 
-  /* ── TOOLBAR ── */
-  .toolbar { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 1.25rem; }
-  .toolbar input {
-    flex: 1; min-width: 160px; height: 36px; padding: 0 12px;
-    background: var(--bg2); border: 1px solid var(--border);
-    border-radius: var(--radius); color: var(--text); font-family: var(--font); font-size: 0.875rem; outline: none;
-    transition: border-color 0.15s;
-  }
-  .toolbar input:focus { border-color: var(--accent); }
-  .tbtn {
-    height: 36px; padding: 0 13px;
-    background: var(--bg2); border: 1px solid var(--border);
-    border-radius: var(--radius); color: var(--muted); font-family: var(--font); font-size: 0.82rem;
-    cursor: pointer; display: inline-flex; align-items: center; gap: 6px; white-space: nowrap;
-    transition: border-color 0.15s, color 0.15s, background 0.15s;
-  }
-  .tbtn:hover { border-color: var(--border2); color: var(--text); }
-  .tbtn.on { border-color: var(--accent); color: var(--accent2); background: rgba(124,109,250,0.08); }
-  .tbtn svg { width: 14px; height: 14px; stroke: currentColor; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
-
-  /* ── CARDS ── */
-  #card-list { display: flex; flex-direction: column; gap: 8px; }
-
-  .fc {
-    background: var(--bg2); border: 1px solid var(--border);
-    border-radius: var(--radius-lg); padding: 1.1rem 1.2rem;
-    cursor: pointer; transition: border-color 0.15s, background 0.15s;
-    position: relative;
-  }
-  .fc:hover { border-color: var(--border2); background: var(--bg3); }
-  .fc.revealed { border-color: rgba(124,109,250,0.35); }
-
-  .fc-top { display: flex; gap: 10px; align-items: flex-start; }
-  .fc-num { font-size: 0.72rem; color: var(--muted); font-family: var(--mono); min-width: 28px; padding-top: 2px; }
-  .fc-q { font-size: 0.9rem; color: var(--text); line-height: 1.65; flex: 1; }
-  .star-btn {
-    background: none; border: none; cursor: pointer;
-    color: var(--muted); padding: 2px; flex-shrink: 0;
-    transition: color 0.15s; line-height: 1;
-  }
-  .star-btn:hover { color: var(--amber); }
-  .star-btn.on { color: var(--amber); }
-  .star-btn svg { width: 15px; height: 15px; stroke: currentColor; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
-  .star-btn.on svg { fill: var(--amber); }
-
-  .fc-ans {
-    margin-top: 10px; padding-top: 10px;
-    border-top: 1px solid var(--border);
-    display: flex; align-items: flex-start; gap: 10px;
-  }
-  .ans-lbl { font-size: 0.68rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; padding-top: 2px; white-space: nowrap; }
-  .ans-text {
-    font-size: 0.9rem; font-weight: 500; color: var(--accent2); flex: 1;
-    filter: blur(7px); user-select: none; transition: filter 0.25s;
-  }
-  .fc.revealed .ans-text { filter: none; user-select: text; }
-  .tap-hint { font-size: 0.72rem; color: var(--muted); white-space: nowrap; padding-top: 2px; }
-  .fc.revealed .tap-hint { display: none; }
-
-  .empty { text-align: center; padding: 3rem 1rem; color: var(--muted); font-size: 0.875rem; }
-
-  /* ── SYNC BADGE ── */
-  #sync-status {
-    position: fixed; bottom: 1.25rem; right: 1.25rem;
-    font-size: 0.75rem; font-family: var(--mono);
-    background: var(--bg2); border: 1px solid var(--border);
-    border-radius: 999px; padding: 0.35rem 0.85rem;
-    color: var(--muted); opacity: 0; transition: opacity 0.3s;
-    pointer-events: none;
-  }
-  #sync-status.show { opacity: 1; }
-  #sync-status.ok   { color: var(--green); border-color: rgba(52,216,155,0.3); }
-  #sync-status.err  { color: var(--red);   border-color: rgba(240,94,94,0.3); }
-
-  @media (max-width: 520px) {
-    .stats { grid-template-columns: repeat(2, 1fr); }
-    header { padding: 0.75rem 1rem; }
-    .user-email { display: none; }
+  @media(max-width:520px){
+    .stats { grid-template-columns:repeat(2,1fr); }
+    header { padding:0.75rem 1rem; }
+    .user-email { display:none; }
   }
 </style>
 </head>
 <body>
 
-<!-- ══════════════════════ AUTH ══════════════════════ -->
+<!-- AUTH -->
 <div id="auth-screen">
   <div class="auth-card">
     <h1>PT Board Prep <span style="color:var(--accent2)">✦</span></h1>
     <p>50 flashcards · answers sync across all your devices</p>
-
     <div class="auth-tabs">
       <div class="auth-tab active" id="tab-login" onclick="switchTab('login')">Sign in</div>
       <div class="auth-tab" id="tab-signup" onclick="switchTab('signup')">Create account</div>
     </div>
-
-    <div class="field">
-      <label>Email</label>
-      <input type="email" id="auth-email" placeholder="you@example.com" />
-    </div>
-    <div class="field">
-      <label>Password</label>
-      <input type="password" id="auth-password" placeholder="••••••••" />
-    </div>
-
+    <div class="field"><label>Email</label><input type="email" id="auth-email" placeholder="you@example.com" /></div>
+    <div class="field"><label>Password</label><input type="password" id="auth-password" placeholder="••••••••" /></div>
     <button class="btn-primary" id="auth-btn" onclick="doAuth()">Sign in</button>
     <div class="auth-msg" id="auth-msg"></div>
   </div>
 </div>
 
-<!-- ══════════════════════ APP ══════════════════════ -->
+<!-- APP -->
 <div id="app-screen">
   <header>
     <div class="logo">PT Prep <span>✦</span></div>
@@ -245,7 +131,6 @@
       <button class="btn-ghost" onclick="signOut()">Sign out</button>
     </div>
   </header>
-
   <main>
     <div class="stats">
       <div class="stat"><div class="lbl">Total</div><div class="val" id="s-total">50</div></div>
@@ -253,7 +138,6 @@
       <div class="stat"><div class="lbl">Revealed</div><div class="val green" id="s-revealed">0</div></div>
       <div class="stat"><div class="lbl">Starred</div><div class="val amber" id="s-starred">0</div></div>
     </div>
-
     <div class="toolbar">
       <input type="text" id="search" placeholder="Search questions or answers…" oninput="render()" />
       <button class="tbtn" id="reveal-btn" onclick="toggleRevealAll()">
@@ -264,12 +148,11 @@
         <svg viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
         Starred
       </button>
-      <button class="tbtn" onclick="shuffle()">
+      <button class="tbtn" onclick="shuffleCards()">
         <svg viewBox="0 0 24 24"><polyline points="16 3 21 3 21 8"/><line x1="4" y1="20" x2="21" y2="3"/><polyline points="21 16 21 21 16 21"/><line x1="15" y1="15" x2="21" y2="21"/></svg>
         Shuffle
       </button>
     </div>
-
     <div id="card-list"></div>
   </main>
 </div>
@@ -277,8 +160,10 @@
 <div id="sync-status">syncing…</div>
 
 <script>
-/* ── DATA ── */
-const RAW = [
+var SUPABASE_URL     = "https://ndhqnhiiapquykphclmo.supabase.co";
+var SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5kaHFuaGlpYXBxdXlrcGhjbG1vIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODAxMjE3NDEsImV4cCI6MjA5NTY5Nzc0MX0.Qz1VdIQMMbjSATQwSdds3HvwyQ1xiWgD6UJnxS8b75E";
+
+var RAW = [
   {q:"A patient sustained a fracture of the proximal humerus, which has healed well. Upon examination, the therapist notes limitation in active shoulder flexion. The scapula protracts, elevates and upwardly rotates early, and elevates excessively when the patient attempts to lift their arm. The NEXT thing the therapist should do is:",a:"Passive shoulder flexion and glenohumeral accessory mobility testing"},
   {q:"Which of the following exercises should be used for a patient 2 weeks post-transurethral resection of the prostate (TURP) without complications?",a:"Kegel exercises"},
   {q:"A PT is supervising the exercise of a cardiac rehabilitation outpatient class on a very hot day, with temperatures expected to be above 90°F. The class is scheduled for 2pm and the facility is not air-conditioned. The BEST strategy is to:",a:"Decrease the exercise intensity by slowing the pace of exercise"},
@@ -313,7 +198,7 @@ const RAW = [
   {q:"A patient with a venous stasis ulcer near the left medial malleolus is referred for PT. Skin changes consistent with stasis dermatitis are evident. Physical examination reveals patent femoral, popliteal, and pedal pulses, and an enlarged greater saphenous vein in standing. The MOST important PT intervention to consider is:",a:"Compression therapy with exercise"},
   {q:"A patient recovering from stroke is having difficulty bearing weight on the left leg, is unable to advance the tibia forward, and abbreviates the end of the stance phase on the left going directly to swing. The MOST likely cause is:",a:"Spasticity or contracture of the plantar flexors"},
   {q:"With a traction injury to the anterior division of the brachial plexus, the PT would expect weakness of the elbow flexors, wrist flexors, and forearm pronators, as well as additional weakness in:",a:"Thumb abduction"},
-  {q:"A frail elderly patient admitted to a skilled nursing facility following a fall-related hip fracture is extremely agitated over being in a nursing facility and demonstrates early signs of dementia, exclaiming 'Leave me alone, I just want to get out of here!' An important approach while working with this patient is to:",a:"Be calm and supportive, and use only one or two-level commands"},
+  {q:"A frail elderly patient admitted to a skilled nursing facility following a fall-related hip fracture is extremely agitated and demonstrates early signs of dementia, exclaiming 'Leave me alone, I just want to get out of here!' An important approach while working with this patient is to:",a:"Be calm and supportive, and use only one or two-level commands"},
   {q:"An elderly patient is being treated for depression following the death of her husband. She is currently taking amitriptyline (tricyclic antidepressant) and has a recent history of a fall. The PT suspects the precipitating cause of the fall is the medication, because it can cause:",a:"Postural hypotension"},
   {q:"A patient with class III heart disease in and out of congestive heart failure is prescribed digitalis (Digoxin). The patient will demonstrate understanding of its adverse side effects by recognizing the importance of contacting the physician with the appearance of:",a:"Weakness and arrhythmias"},
   {q:"A patient with HIV is hospitalized with a viral infection and has a history of four infectious episodes within the past year. The PT recognizes that ongoing systemic effects are likely to include:",a:"Low-grade fever, malaise, anemia, and fatigue"},
@@ -321,46 +206,39 @@ const RAW = [
   {q:"A patient complains of pain (7/10) and limited ROM of the right shoulder due to chronic overuse. The PT elects to use procaine hydrochloride iontophoresis. To administer this substance, it would be appropriate to use:",a:"Continuous biphasic current, with the medication under the anode"},
   {q:"A contraindication to initiating extremity joint mobilization on a patient with chronic pulmonary disease may include:",a:"Long-term corticosteroid therapy"},
   {q:"An elderly frail individual receiving home PT has a 4-year history of taking NSAIDs for joint pain and recently began taking verapamil (calcium channel blocker). The PT examines for possible adverse reactions that could include:",a:"Stomach pain, hypertension, confusion"},
-  {q:"A computer programmer with no significant past medical history presents with fever, shaking chills, worsening productive cough, and chest pain over the posterior base of the left thorax made worse on inspiration. An x-ray shows an infiltrate at the lower left thorax posterior base. This patient's chest pain is MOST likely caused by:",a:"Infected pleura"},
+  {q:"A computer programmer presents with fever, shaking chills, worsening productive cough, and chest pain over the posterior base of the left thorax made worse on inspiration. An x-ray shows an infiltrate at the lower left thorax posterior base. This patient's chest pain is MOST likely caused by:",a:"Infected pleura"},
   {q:"An elderly patient has an irregular, dark pigmented ulcer over the medial malleolus. The patient states it is not painful. The MOST likely diagnosis is:",a:"Venous ulcer"},
   {q:"An elderly frail resident of an extended care facility presents with hot, red, and edematous skin over the shins of both lower extremities, and a mild fever. The MOST likely cause of the symptoms is:",a:"Cellulitis"},
-  {q:"A 10-year-old presents with pain (4/10) and limited knee ROM (5–95°) following surgical repair of the medial collateral ligament and ACL. The modality that can be used with PRECAUTION is:",a:"Low-dose ultrasound (USE)"},
-  {q:"A weight lifter exhibits marked hypertrophy after embarking on a strength training regime. Hypertrophy can be expected to occur following at least:",a:"6–8 weeks of training"},
+  {q:"A 10-year-old presents with pain (4/10) and limited knee ROM (5-95°) following surgical repair of the medial collateral ligament and ACL. The modality that can be used with PRECAUTION is:",a:"Low-dose ultrasound (USE)"},
+  {q:"A weight lifter exhibits marked hypertrophy after embarking on a strength training regime. Hypertrophy can be expected to occur following at least:",a:"6-8 weeks of training"},
   {q:"A diagnosis of bicipital tendinitis has been made following an evaluation of a patient with shoulder pain. The BEST shoulder position to expose the tendon of the long head of the biceps for application of phonophoresis would be:",a:"Lateral rotation and extension"},
   {q:"A patient is unable to bring a foot up to the next step during stair climbing training. The PT's BEST course of action to promote learning of this task is to have the patient practice:",a:"Step-ups onto a low step while in the parallel bars"},
-  {q:"A patient is transferred to a burn clinic with deep, partial-thickness burns over 30% of the body. Healing of this type of burn is characterized by:",a:"Marked edema with slow healing and extensive hypertrophic scarring"},
+  {q:"A patient is transferred to a burn clinic with deep, partial-thickness burns over 30% of the body. Healing of this type of burn is characterized by:",a:"Marked edema with slow healing and extensive hypertrophic scarring"}
 ];
 
-/* ── STATE ── */
-let supabase, userId;
-let cards = RAW.map((c,i)=>({...c, id:i, revealed:false, starred:false}));
-let allRevealed = false;
-let starFilter  = false;
-let currentTab  = 'login';
-let syncTimer;
+/* STATE */
+var sb = null;
+var userId = null;
+var cards = RAW.map(function(c,i){ return {q:c.q, a:c.a, id:i, revealed:false, starred:false}; });
+var allRevealed = false;
+var starFilter  = false;
+var currentTab  = 'login';
+var syncTimer;
 
-/* ── SUPABASE INIT ── */
-async function initSupabase() {
-  supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-  const { data: { session } } = await supabase.auth.getSession();
-  if (session) {
-    userId = session.user.id;
-    showApp(session.user.email);
-    await loadStars();
-  }
-  supabase.auth.onAuthStateChange((_e, session) => {
-    if (session) {
-      userId = session.user.id;
-      showApp(session.user.email);
-      loadStars();
-    } else {
-      userId = null;
-      showAuth();
-    }
+/* BOOT */
+window.addEventListener('load', function() {
+  sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+  sb.auth.getSession().then(function(res) {
+    var session = res.data && res.data.session;
+    if (session) { userId = session.user.id; showApp(session.user.email); loadStars(); }
   });
-}
+  sb.auth.onAuthStateChange(function(_e, session) {
+    if (session) { userId = session.user.id; showApp(session.user.email); loadStars(); }
+    else { userId = null; showAuth(); }
+  });
+});
 
-/* ── AUTH ── */
+/* AUTH */
 function switchTab(t) {
   currentTab = t;
   document.getElementById('tab-login').classList.toggle('active', t==='login');
@@ -370,33 +248,37 @@ function switchTab(t) {
 }
 
 function setMsg(text, type) {
-  const el = document.getElementById('auth-msg');
+  var el = document.getElementById('auth-msg');
   el.textContent = text;
   el.className = 'auth-msg' + (type ? ' '+type : '');
 }
 
-async function doAuth() {
-  const email    = document.getElementById('auth-email').value.trim();
-  const password = document.getElementById('auth-password').value;
-  const btn      = document.getElementById('auth-btn');
+function doAuth() {
+  var email    = document.getElementById('auth-email').value.trim();
+  var password = document.getElementById('auth-password').value;
+  var btn      = document.getElementById('auth-btn');
   if (!email || !password) { setMsg('Please fill in both fields.','error'); return; }
   btn.disabled = true;
   btn.textContent = 'Please wait…';
-  let error;
   if (currentTab === 'login') {
-    ({ error } = await supabase.auth.signInWithPassword({ email, password }));
+    sb.auth.signInWithPassword({email:email, password:password}).then(function(res) {
+      btn.disabled = false; btn.textContent = 'Sign in';
+      if (res.error) setMsg(res.error.message, 'error');
+    });
   } else {
-    ({ error } = await supabase.auth.signUp({ email, password }));
-    if (!error) { setMsg('Account created! Check your email to confirm, then sign in.','success'); btn.disabled=false; btn.textContent='Create account'; return; }
+    sb.auth.signUp({email:email, password:password}).then(function(res) {
+      btn.disabled = false; btn.textContent = 'Create account';
+      if (res.error) { setMsg(res.error.message, 'error'); return; }
+      if (res.data && res.data.session) {
+        setMsg('',''); /* logged in immediately (email confirm disabled) */
+      } else {
+        setMsg('Check your email to confirm your account, then sign in.','success');
+      }
+    });
   }
-  btn.disabled = false;
-  btn.textContent = currentTab==='login' ? 'Sign in' : 'Create account';
-  if (error) setMsg(error.message, 'error');
 }
 
-async function signOut() {
-  await supabase.auth.signOut();
-}
+function signOut() { sb.auth.signOut(); }
 
 function showAuth() {
   document.getElementById('auth-screen').style.display = 'flex';
@@ -409,45 +291,45 @@ function showApp(email) {
   render();
 }
 
-/* ── SUPABASE SYNC ── */
-async function loadStars() {
-  const { data, error } = await supabase
-    .from('stars')
-    .select('question_id')
-    .eq('user_id', userId);
-  if (error) { console.error(error); return; }
-  const ids = new Set(data.map(r => r.question_id));
-  cards.forEach(c => c.starred = ids.has(c.id));
-  render();
+/* SYNC */
+function loadStars() {
+  sb.from('stars').select('question_id').eq('user_id', userId).then(function(res) {
+    if (res.error) { console.error(res.error); return; }
+    var ids = {};
+    res.data.forEach(function(r){ ids[r.question_id] = true; });
+    cards.forEach(function(c){ c.starred = !!ids[c.id]; });
+    render();
+  });
 }
 
 function flashSync(state) {
-  const el = document.getElementById('sync-status');
+  var el = document.getElementById('sync-status');
   el.textContent = state === 'ok' ? '✓ synced' : '⚠ sync error';
   el.className = 'show ' + state;
   clearTimeout(syncTimer);
-  syncTimer = setTimeout(()=> el.className = '', 2000);
+  syncTimer = setTimeout(function(){ el.className = ''; }, 2000);
 }
 
-async function saveStar(card) {
+function saveStar(card) {
+  if (!userId) return;
   if (card.starred) {
-    const { error } = await supabase.from('stars').upsert({ user_id: userId, question_id: card.id }, { onConflict: 'user_id,question_id' });
-    flashSync(error ? 'err' : 'ok');
+    sb.from('stars').upsert({user_id:userId, question_id:card.id},{onConflict:'user_id,question_id'}).then(function(r){ flashSync(r.error?'err':'ok'); });
   } else {
-    const { error } = await supabase.from('stars').delete().eq('user_id', userId).eq('question_id', card.id);
-    flashSync(error ? 'err' : 'ok');
+    sb.from('stars').delete().eq('user_id',userId).eq('question_id',card.id).then(function(r){ flashSync(r.error?'err':'ok'); });
   }
 }
 
-/* ── CONTROLS ── */
+/* CONTROLS */
 function toggleRevealAll() {
   allRevealed = !allRevealed;
-  cards.forEach(c => c.revealed = allRevealed);
-  const btn = document.getElementById('reveal-btn');
+  cards.forEach(function(c){ c.revealed = allRevealed; });
+  var btn = document.getElementById('reveal-btn');
   btn.classList.toggle('on', allRevealed);
-  btn.innerHTML = allRevealed
-    ? `<svg viewBox="0 0 24 24" style="width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/><path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/><line x1="1" y1="1" x2="23" y2="23"/></svg> Hide all`
-    : `<svg viewBox="0 0 24 24" style="width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg> Reveal all`;
+  if (allRevealed) {
+    btn.innerHTML = '<svg viewBox="0 0 24 24" style="width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/><path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/><line x1="1" y1="1" x2="23" y2="23"/></svg> Hide all';
+  } else {
+    btn.innerHTML = '<svg viewBox="0 0 24 24" style="width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg> Reveal all';
+  }
   render();
 }
 
@@ -457,74 +339,63 @@ function toggleStarFilter() {
   render();
 }
 
-function shuffle() {
-  for (let i = cards.length-1; i > 0; i--) {
-    const j = Math.floor(Math.random()*(i+1));
-    [cards[i],cards[j]] = [cards[j],cards[i]];
+function shuffleCards() {
+  for (var i = cards.length-1; i > 0; i--) {
+    var j = Math.floor(Math.random()*(i+1));
+    var tmp = cards[i]; cards[i] = cards[j]; cards[j] = tmp;
   }
   render();
 }
 
 function toggleCard(id) {
-  const c = cards.find(x=>x.id===id);
-  if (c) c.revealed = !c.revealed;
+  for (var i=0;i<cards.length;i++) { if (cards[i].id===id){ cards[i].revealed=!cards[i].revealed; break; } }
   render();
 }
 
 function toggleStar(id, e) {
   e.stopPropagation();
-  const c = cards.find(x=>x.id===id);
-  if (!c) return;
-  c.starred = !c.starred;
-  saveStar(c);
+  for (var i=0;i<cards.length;i++) { if (cards[i].id===id){ cards[i].starred=!cards[i].starred; saveStar(cards[i]); break; } }
   render();
 }
 
-/* ── RENDER ── */
+/* RENDER */
 function render() {
-  const q = (document.getElementById('search')||{value:''}).value.toLowerCase();
-  const visible = cards.filter(c => {
-    const matchQ = !q || c.q.toLowerCase().includes(q) || c.a.toLowerCase().includes(q);
-    const matchS = !starFilter || c.starred;
-    return matchQ && matchS;
+  var searchEl = document.getElementById('search');
+  var q = searchEl ? searchEl.value.toLowerCase() : '';
+  var visible = cards.filter(function(c) {
+    var mq = !q || c.q.toLowerCase().indexOf(q)>=0 || c.a.toLowerCase().indexOf(q)>=0;
+    var ms = !starFilter || c.starred;
+    return mq && ms;
   });
 
-  document.getElementById('s-total').textContent   = cards.length;
-  document.getElementById('s-showing').textContent = visible.length;
-  document.getElementById('s-revealed').textContent= cards.filter(c=>c.revealed).length;
-  document.getElementById('s-starred').textContent = cards.filter(c=>c.starred).length;
+  document.getElementById('s-total').textContent    = cards.length;
+  document.getElementById('s-showing').textContent  = visible.length;
+  document.getElementById('s-revealed').textContent = cards.filter(function(c){return c.revealed;}).length;
+  document.getElementById('s-starred').textContent  = cards.filter(function(c){return c.starred;}).length;
 
-  const list = document.getElementById('card-list');
+  var list = document.getElementById('card-list');
   if (!list) return;
+  if (!visible.length) { list.innerHTML = '<div class="empty">No matching questions found.</div>'; return; }
 
-  if (!visible.length) {
-    list.innerHTML = '<div class="empty">No matching questions found.</div>';
-    return;
-  }
+  var starOff = '<svg viewBox="0 0 24 24" style="width:15px;height:15px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>';
+  var starOn  = '<svg viewBox="0 0 24 24" style="width:15px;height:15px;stroke:var(--amber);fill:var(--amber);stroke-width:2;stroke-linecap:round;stroke-linejoin:round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>';
 
-  const starIconOff = `<svg viewBox="0 0 24 24" style="width:15px;height:15px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>`;
-  const starIconOn  = `<svg viewBox="0 0 24 24" style="width:15px;height:15px;stroke:var(--amber);fill:var(--amber);stroke-width:2;stroke-linecap:round;stroke-linejoin:round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>`;
-
-  list.innerHTML = visible.map((c,i) => `
-    <div class="fc${c.revealed?' revealed':''}" onclick="toggleCard(${c.id})">
-      <div class="fc-top">
-        <span class="fc-num">${String(i+1).padStart(2,'0')}</span>
-        <span class="fc-q">${c.q}</span>
-        <button class="star-btn${c.starred?' on':''}" onclick="toggleStar(${c.id},event)" aria-label="${c.starred?'Unstar':'Star'}">
-          ${c.starred ? starIconOn : starIconOff}
-        </button>
-      </div>
-      <div class="fc-ans">
-        <span class="ans-lbl">Answer</span>
-        <span class="ans-text">${c.a}</span>
-        <span class="tap-hint">tap to reveal</span>
-      </div>
-    </div>
-  `).join('');
+  list.innerHTML = visible.map(function(c,i) {
+    var num = String(i+1).length<2 ? '0'+(i+1) : ''+(i+1);
+    return '<div class="fc'+(c.revealed?' revealed':'')+'" onclick="toggleCard('+c.id+')">'
+      +'<div class="fc-top">'
+      +'<span class="fc-num">'+num+'</span>'
+      +'<span class="fc-q">'+c.q+'</span>'
+      +'<button class="star-btn'+(c.starred?' on':'')+'" onclick="toggleStar('+c.id+',event)" aria-label="'+(c.starred?'Unstar':'Star')+'">'+(c.starred?starOn:starOff)+'</button>'
+      +'</div>'
+      +'<div class="fc-ans">'
+      +'<span class="ans-lbl">Answer</span>'
+      +'<span class="ans-text">'+c.a+'</span>'
+      +'<span class="tap-hint">tap to reveal</span>'
+      +'</div>'
+      +'</div>';
+  }).join('');
 }
-
-/* ── BOOT ── */
-initSupabase();
 </script>
 </body>
 </html>
