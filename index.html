@@ -371,7 +371,6 @@ var RAW = [
   {q:"A 12-year-old is referred for treatment of patellar tendinitis. The patient is unable to hop on the affected lower extremity because of pain and is sent for an x-ray. The therapist's initial intervention should focus on:",a:"Iontophoresis using dexamethasone and patient education regarding avoidance of squatting and jumping activities"}
 ];
 
-var sb = null;
 var userId = null;
 var cards = RAW.map(function(c,i){ return {q:c.q,a:c.a,id:i,revealed:false,starred:false}; });
 var allRevealed = false;
@@ -380,29 +379,41 @@ var revFilter   = false;
 var currentTab  = 'login';
 var syncTimer;
 
-/* BOOT
-   Wire UI events immediately on DOMContentLoaded so buttons work even
-   before the Supabase network request finishes. Supabase client is
-   initialised separately once the library script has loaded.
-*/
+/* Initialise Supabase immediately — the CDN script is already parsed
+   because this <script> block comes after it in the HTML */
+var sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+/* BOOT — wire all UI events as soon as the DOM is ready */
 document.addEventListener('DOMContentLoaded', function() {
+
+  /* Check for existing session */
+  sb.auth.getSession().then(function(res) {
+    var session = res.data && res.data.session;
+    if (session) { userId = session.user.id; showApp(session.user.email); loadStars(); }
+  });
+  sb.auth.onAuthStateChange(function(_e, session) {
+    if (session) { userId = session.user.id; showApp(session.user.email); loadStars(); }
+    else { userId = null; showAuth(); }
+  });
 
   /* Auth tabs */
   document.querySelectorAll('.auth-tab').forEach(function(el) {
     el.addEventListener('click', function() { switchTab(this.dataset.tab); });
   });
 
-  /* Sign-in button — bind both click AND touchend so mobile Safari never misses it */
+  /* Sign-in button — use touchstart for instant mobile response */
   var authBtn = document.getElementById('auth-btn');
-  var authBtnTouched = false;
-  authBtn.addEventListener('touchend', function(e) {
-    e.preventDefault();          /* prevent the 300ms ghost click */
-    authBtnTouched = true;
+  var lastTouch = 0;
+  authBtn.addEventListener('touchstart', function(e) {
+    e.preventDefault();
+    var now = Date.now();
+    if (now - lastTouch < 500) return; /* debounce double-taps */
+    lastTouch = now;
     doAuth();
-    setTimeout(function(){ authBtnTouched = false; }, 600);
-  });
+  }, {passive: false});
   authBtn.addEventListener('click', function() {
-    if (!authBtnTouched) doAuth();
+    /* only fires on non-touch devices */
+    if (Date.now() - lastTouch > 500) doAuth();
   });
 
   /* All other buttons */
@@ -415,20 +426,6 @@ document.addEventListener('DOMContentLoaded', function() {
   document.getElementById('nav-starred').addEventListener('click', function(){ setNav('starred'); });
   document.getElementById('nav-revealed').addEventListener('click', function(){ setNav('revealed'); });
   document.getElementById('nav-shuffle').addEventListener('click', function(){ shuffleCards(); highlightNavBtn('nav-shuffle'); });
-});
-
-/* Supabase init — runs once the CDN script has fully loaded */
-window.addEventListener('load', function() {
-  sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-
-  sb.auth.getSession().then(function(res) {
-    var session = res.data && res.data.session;
-    if (session) { userId = session.user.id; showApp(session.user.email); loadStars(); }
-  });
-  sb.auth.onAuthStateChange(function(_e, session) {
-    if (session) { userId = session.user.id; showApp(session.user.email); loadStars(); }
-    else { userId = null; showAuth(); }
-  });
 });
 
 /* AUTH */
