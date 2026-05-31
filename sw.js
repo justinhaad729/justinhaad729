@@ -1,4 +1,5 @@
-var CACHE = 'haad-v1';
+/* Bump version to bust ALL old caches — forces fresh index.html on every device */
+var CACHE = 'haad-v3';
 var ASSETS = [
   '/',
   '/index.html',
@@ -13,7 +14,7 @@ self.addEventListener('install', function(e) {
       return cache.addAll(ASSETS);
     })
   );
-  self.skipWaiting();
+  self.skipWaiting(); /* take over immediately, don't wait for old SW to die */
 });
 
 self.addEventListener('activate', function(e) {
@@ -25,28 +26,35 @@ self.addEventListener('activate', function(e) {
       );
     })
   );
-  self.clients.claim();
+  self.clients.claim(); /* take control of all open tabs immediately */
 });
 
 self.addEventListener('fetch', function(e) {
-  // Let Supabase API calls always go to network
+  /* Always hit network for Supabase */
   if (e.request.url.indexOf('supabase.co') !== -1) return;
-
+  /* Always hit network for the HTML itself so updates are instant */
+  if (e.request.mode === 'navigate') {
+    e.respondWith(
+      fetch(e.request).then(function(response) {
+        var clone = response.clone();
+        caches.open(CACHE).then(function(cache){ cache.put(e.request, clone); });
+        return response;
+      }).catch(function() {
+        return caches.match('/index.html');
+      })
+    );
+    return;
+  }
+  /* For other assets: cache first */
   e.respondWith(
     caches.match(e.request).then(function(cached) {
       if (cached) return cached;
       return fetch(e.request).then(function(response) {
-        // Cache successful GET requests
         if (e.request.method === 'GET' && response.status === 200) {
           var clone = response.clone();
           caches.open(CACHE).then(function(cache){ cache.put(e.request, clone); });
         }
         return response;
-      }).catch(function() {
-        // Offline fallback — serve index.html for navigation requests
-        if (e.request.mode === 'navigate') {
-          return caches.match('/index.html');
-        }
       });
     })
   );
