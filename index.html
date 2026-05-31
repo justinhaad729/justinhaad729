@@ -16,177 +16,120 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet" />
 <style>
-*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+*, *::before, *::after { box-sizing:border-box; margin:0; padding:0; -webkit-tap-highlight-color:transparent; }
 :root {
   --bg:#0d0d10; --bg2:#17171c; --bg3:#1f1f26; --bg4:#27272f;
   --border:#2a2a35; --border2:#3a3a48;
-  --text:#eeeef5; --text2:#b0b0c8; --muted:#6e6e88;
+  --text:#eeeef5; --muted:#6e6e88;
   --accent:#7c6dfa; --accent2:#a996ff; --accentbg:rgba(124,109,250,0.10);
   --green:#2dd4a0; --amber:#f5a623; --red:#f06060;
   --font:'DM Sans',sans-serif; --mono:'DM Mono',monospace;
-  --r:12px; --r-lg:18px; --r-xl:24px;
+  --r:12px; --r-lg:18px;
   --nav-h:64px; --safe-b:env(safe-area-inset-bottom,0px);
 }
 html { font-family:var(--font); background:var(--bg); color:var(--text); font-size:16px; height:100%; }
 body { min-height:100%; overscroll-behavior:none; }
 
-/* AUTH */
-#auth-screen {
-  min-height:100dvh; display:flex; align-items:center; justify-content:center; padding:1.5rem;
-  background:radial-gradient(ellipse at 60% 20%,rgba(124,109,250,0.12) 0%,transparent 60%);
-  position:relative;
-  z-index:10;
+/* SYNC BANNER */
+#sync-banner {
+  position:fixed; top:0; left:0; right:0; z-index:999;
+  background:var(--bg3); border-bottom:1px solid var(--border);
+  padding:10px 16px;
+  display:flex; align-items:center; justify-content:space-between; gap:12px;
+  transform:translateY(-100%); transition:transform .3s ease;
 }
-.auth-wrap { width:100%; max-width:420px; }
-.auth-logo { display:flex; align-items:center; gap:12px; margin-bottom:2rem; }
-.auth-logo-icon {
-  width:48px; height:48px; border-radius:14px; background:var(--accent);
-  display:flex; align-items:center; justify-content:center;
-  font-size:1.4rem; font-weight:700; color:#fff; letter-spacing:-0.02em; flex-shrink:0;
-}
-.auth-logo-text { font-size:1.5rem; font-weight:600; letter-spacing:-0.03em; }
-.auth-logo-text span { color:var(--accent2); }
-.auth-card { background:var(--bg2); border:1px solid var(--border); border-radius:var(--r-xl); padding:1.75rem 1.5rem; }
-.auth-card-title { font-size:1.1rem; font-weight:600; margin-bottom:4px; }
-.auth-card-sub { font-size:0.82rem; color:var(--muted); margin-bottom:1.5rem; }
-.auth-tabs { display:flex; background:var(--bg3); border-radius:var(--r); padding:3px; gap:3px; margin-bottom:1.4rem; }
-.auth-tab { flex:1; text-align:center; padding:0.5rem 0; border-radius:calc(var(--r) - 2px); font-size:0.875rem; color:var(--muted); cursor:pointer; transition:background .18s,color .18s; user-select:none; background:none; border:none; font-family:var(--font); -webkit-appearance:none; appearance:none; touch-action:manipulation; }
-.auth-tab.active { background:var(--bg4); color:var(--text); font-weight:500; }
-.field { margin-bottom:0.9rem; }
-.field label { display:block; font-size:0.78rem; color:var(--muted); margin-bottom:6px; font-weight:500; letter-spacing:0.02em; }
-.field input { width:100%; height:46px; padding:0 14px; background:var(--bg3); border:1px solid var(--border); border-radius:var(--r); color:var(--text); font-family:var(--font); font-size:1rem; outline:none; transition:border-color .15s; -webkit-appearance:none; }
-.field input:focus { border-color:var(--accent); box-shadow:0 0 0 3px rgba(124,109,250,0.15); }
-.btn-primary { width:100%; height:48px; background:var(--accent); border:none; border-radius:var(--r); color:#fff; font-family:var(--font); font-size:1rem; font-weight:600; cursor:pointer; transition:opacity .15s,transform .1s; margin-top:0.25rem; touch-action:manipulation; -webkit-appearance:none; appearance:none; }
-.btn-primary:hover { opacity:0.9; }
-.btn-primary:active { transform:scale(0.98); }
-.btn-primary:disabled { opacity:0.45; cursor:default; }
-.auth-msg { margin-top:0.8rem; font-size:0.82rem; text-align:center; min-height:1.1em; line-height:1.4; }
-.auth-msg.error { color:var(--red); }
-.auth-msg.success { color:var(--green); }
+#sync-banner.show { transform:translateY(0); }
+#sync-banner p { font-size:0.82rem; color:var(--text); flex:1; }
+#sync-banner p span { color:var(--accent2); font-family:var(--mono); font-size:0.75rem; word-break:break-all; }
+.banner-close { background:none; border:1px solid var(--border2); border-radius:var(--r); color:var(--muted); font-family:var(--font); font-size:0.75rem; padding:4px 10px; cursor:pointer; white-space:nowrap; touch-action:manipulation; }
 
-/* APP SHELL */
-#app-screen {
-  display:none;
-  min-height:100dvh;
-  flex-direction:column;
-  /* Ensure hidden app-screen never intercepts taps on auth screen */
-  pointer-events:none;
-  visibility:hidden;
-  position:relative;
-  z-index:1;
-}
-#app-screen.active {
-  display:flex;
-  pointer-events:auto;
-  visibility:visible;
-}
-#app-screen.active .bottom-nav { display:flex; }
-
+/* HEADER */
 .app-header {
   position:sticky; top:0; z-index:200;
-  background:rgba(13,13,16,0.88); backdrop-filter:blur(16px) saturate(1.4);
-  -webkit-backdrop-filter:blur(16px) saturate(1.4);
+  background:rgba(13,13,16,0.92); backdrop-filter:blur(16px);
+  -webkit-backdrop-filter:blur(16px);
   border-bottom:1px solid var(--border);
   height:56px; padding:0 1.25rem;
   padding-top:env(safe-area-inset-top,0px);
-  display:flex; align-items:center; justify-content:space-between; gap:12px;
+  display:flex; align-items:center; justify-content:space-between; gap:10px;
 }
-.header-logo { font-size:1.05rem; font-weight:700; letter-spacing:-0.02em; }
+.header-logo { font-size:1.1rem; font-weight:700; letter-spacing:-0.02em; }
 .header-logo span { color:var(--accent2); }
 .header-right { display:flex; align-items:center; gap:8px; }
-.user-pill { font-size:0.72rem; color:var(--muted); font-family:var(--mono); background:var(--bg3); border:1px solid var(--border); border-radius:999px; padding:4px 10px; max-width:160px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
-.signout-btn { height:32px; padding:0 12px; background:transparent; border:1px solid var(--border2); border-radius:var(--r); color:var(--muted); font-family:var(--font); font-size:0.78rem; cursor:pointer; transition:color .15s,border-color .15s; white-space:nowrap; }
-.signout-btn:hover { color:var(--text); border-color:var(--accent); }
+.header-count { font-size:0.72rem; color:var(--muted); font-family:var(--mono); background:var(--bg3); border:1px solid var(--border); border-radius:999px; padding:3px 10px; white-space:nowrap; }
+.sync-dot { width:7px; height:7px; border-radius:50%; background:var(--muted); flex-shrink:0; transition:background .3s; }
+.sync-dot.ok  { background:var(--green); }
+.sync-dot.err { background:var(--red); }
+.sync-dot.busy { background:var(--amber); animation:pulse .8s infinite alternate; }
+@keyframes pulse { from{opacity:1} to{opacity:0.3} }
 
-.app-body { flex:1; overflow-y:auto; padding:1.25rem 1rem calc(var(--nav-h) + var(--safe-b) + 1rem); -webkit-overflow-scrolling:touch; }
+/* BODY */
+.app-body { overflow-y:auto; padding:1.25rem 1rem calc(var(--nav-h) + var(--safe-b) + 1rem); -webkit-overflow-scrolling:touch; }
 
 /* STATS */
 .stats { display:grid; grid-template-columns:repeat(4,1fr); gap:8px; margin-bottom:1.1rem; }
 .stat { background:var(--bg2); border:1px solid var(--border); border-radius:var(--r); padding:0.7rem 0.75rem; }
 .stat .lbl { font-size:0.62rem; color:var(--muted); text-transform:uppercase; letter-spacing:0.07em; margin-bottom:3px; }
-.stat .val { font-size:1.35rem; font-weight:600; font-family:var(--mono); color:var(--text); line-height:1; }
-.stat .val.c-accent { color:var(--accent2); }
-.stat .val.c-green  { color:var(--green); }
-.stat .val.c-amber  { color:var(--amber); }
+.stat .val { font-size:1.35rem; font-weight:600; font-family:var(--mono); line-height:1; color:var(--text); }
+.stat .val.ca { color:var(--accent2); }
+.stat .val.cg { color:var(--green); }
+.stat .val.co { color:var(--amber); }
 
 /* SEARCH */
 .search-wrap { position:relative; margin-bottom:0.85rem; }
-.search-wrap svg { position:absolute; left:12px; top:50%; transform:translateY(-50%); width:16px; height:16px; stroke:var(--muted); fill:none; stroke-width:2; stroke-linecap:round; stroke-linejoin:round; pointer-events:none; }
-#search { width:100%; height:44px; padding:0 12px 0 38px; background:var(--bg2); border:1px solid var(--border); border-radius:var(--r); color:var(--text); font-family:var(--font); font-size:0.9rem; outline:none; transition:border-color .15s; -webkit-appearance:none; }
-#search:focus { border-color:var(--accent); box-shadow:0 0 0 3px rgba(124,109,250,0.12); }
+.search-icon { position:absolute; left:12px; top:50%; transform:translateY(-50%); width:16px; height:16px; stroke:var(--muted); fill:none; stroke-width:2; stroke-linecap:round; stroke-linejoin:round; pointer-events:none; }
+#search { width:100%; height:44px; padding:0 12px 0 38px; background:var(--bg2); border:1px solid var(--border); border-radius:var(--r); color:var(--text); font-family:var(--font); font-size:0.9rem; outline:none; -webkit-appearance:none; }
+#search:focus { border-color:var(--accent); }
 #search::placeholder { color:var(--muted); }
 
 /* ACTION PILLS */
-.action-row { display:flex; gap:7px; margin-bottom:1.1rem; flex-wrap:wrap; }
-.apill { display:inline-flex; align-items:center; gap:6px; height:36px; padding:0 13px; background:var(--bg2); border:1px solid var(--border); border-radius:999px; color:var(--muted); font-family:var(--font); font-size:0.8rem; cursor:pointer; user-select:none; transition:background .15s,border-color .15s,color .15s; white-space:nowrap; }
-.apill:active { transform:scale(0.96); }
-.apill svg { width:13px; height:13px; stroke:currentColor; fill:none; stroke-width:2; stroke-linecap:round; stroke-linejoin:round; flex-shrink:0; }
+.action-row { display:flex; gap:7px; margin-bottom:1.1rem; }
+.apill { display:inline-flex; align-items:center; gap:6px; height:36px; padding:0 13px; background:var(--bg2); border:1px solid var(--border); border-radius:999px; color:var(--muted); font-family:var(--font); font-size:0.8rem; cursor:pointer; white-space:nowrap; touch-action:manipulation; -webkit-appearance:none; appearance:none; transition:background .15s,border-color .15s,color .15s; }
+.apill svg { width:13px; height:13px; stroke:currentColor; fill:none; stroke-width:2; stroke-linecap:round; stroke-linejoin:round; }
 .apill.on { background:var(--accentbg); border-color:var(--accent); color:var(--accent2); }
 .apill.amber-on { background:rgba(245,166,35,0.1); border-color:var(--amber); color:var(--amber); }
 
 /* CARDS */
 #card-list { display:flex; flex-direction:column; gap:8px; }
-.fc { background:var(--bg2); border:1px solid var(--border); border-radius:var(--r-lg); padding:1rem 1.1rem; cursor:pointer; transition:border-color .15s,background .15s; -webkit-user-select:none; user-select:none; }
-.fc:active { background:var(--bg3); }
+.fc { background:var(--bg2); border:1px solid var(--border); border-radius:var(--r-lg); padding:1rem 1.1rem; cursor:pointer; -webkit-user-select:none; user-select:none; touch-action:manipulation; }
 .fc.revealed { border-color:rgba(124,109,250,0.4); background:var(--bg3); }
 .fc-top { display:flex; gap:10px; align-items:flex-start; }
 .fc-num { font-size:0.68rem; color:var(--muted); font-family:var(--mono); min-width:26px; padding-top:3px; flex-shrink:0; }
 .fc-q { font-size:0.9rem; line-height:1.65; flex:1; color:var(--text); }
-.star-btn { background:none; border:none; cursor:pointer; padding:4px; color:var(--muted); flex-shrink:0; line-height:0; transition:color .15s; border-radius:6px; min-width:30px; min-height:30px; display:flex; align-items:center; justify-content:center; }
-.star-btn:active { background:var(--bg4); }
+.star-btn { background:none; border:none; padding:4px; color:var(--muted); flex-shrink:0; display:flex; align-items:center; justify-content:center; min-width:32px; min-height:32px; border-radius:6px; cursor:pointer; touch-action:manipulation; -webkit-appearance:none; }
 .star-btn svg { width:17px; height:17px; stroke:currentColor; fill:none; stroke-width:2; stroke-linecap:round; stroke-linejoin:round; }
 .star-btn.on { color:var(--amber); }
 .star-btn.on svg { fill:var(--amber); }
 .fc-ans { margin-top:10px; padding-top:10px; border-top:1px solid var(--border); display:flex; align-items:flex-start; gap:8px; }
 .ans-lbl { font-size:0.64rem; color:var(--muted); text-transform:uppercase; letter-spacing:0.07em; padding-top:3px; white-space:nowrap; flex-shrink:0; }
-.ans-text { font-size:0.92rem; font-weight:600; color:var(--accent2); flex:1; filter:blur(7px); transition:filter .25s ease; line-height:1.5; }
+.ans-text { font-size:0.92rem; font-weight:600; color:var(--accent2); flex:1; filter:blur(7px); transition:filter .25s; line-height:1.5; }
 .fc.revealed .ans-text { filter:none; -webkit-user-select:text; user-select:text; }
 .tap-hint { font-size:0.68rem; color:var(--muted); white-space:nowrap; padding-top:3px; flex-shrink:0; }
 .fc.revealed .tap-hint { display:none; }
 .empty { text-align:center; padding:4rem 1rem; color:var(--muted); font-size:0.9rem; }
 
 /* BOTTOM NAV */
-.bottom-nav {
-  display:none; /* hidden until app is active */
-  position:fixed; bottom:0; left:0; right:0; z-index:200;
-  background:rgba(13,13,16,0.94); backdrop-filter:blur(16px);
-  -webkit-backdrop-filter:blur(16px);
-  border-top:1px solid var(--border);
-  display:flex; align-items:stretch;
-  height:calc(var(--nav-h) + var(--safe-b));
-  padding-bottom:var(--safe-b);
-}
-.nav-btn { flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:4px; border:none; background:none; color:var(--muted); font-family:var(--font); font-size:0.62rem; font-weight:500; cursor:pointer; transition:color .15s; padding:0; letter-spacing:0.03em; text-transform:uppercase; }
-.nav-btn svg { width:22px; height:22px; stroke:currentColor; fill:none; stroke-width:1.75; stroke-linecap:round; stroke-linejoin:round; transition:stroke .15s; }
+.bottom-nav { position:fixed; bottom:0; left:0; right:0; z-index:200; background:rgba(13,13,16,0.94); backdrop-filter:blur(16px); -webkit-backdrop-filter:blur(16px); border-top:1px solid var(--border); display:flex; align-items:stretch; height:calc(var(--nav-h) + var(--safe-b)); padding-bottom:var(--safe-b); }
+.nav-btn { flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:4px; border:none; background:none; color:var(--muted); font-family:var(--font); font-size:0.62rem; font-weight:500; cursor:pointer; letter-spacing:0.03em; text-transform:uppercase; touch-action:manipulation; -webkit-appearance:none; }
+.nav-btn svg { width:22px; height:22px; stroke:currentColor; fill:none; stroke-width:1.75; stroke-linecap:round; stroke-linejoin:round; }
 .nav-btn.active { color:var(--accent2); }
-.nav-btn:active { opacity:0.7; }
 
-/* SYNC TOAST */
-#sync-status { position:fixed; bottom:calc(var(--nav-h) + var(--safe-b) + 12px); left:50%; transform:translateX(-50%); font-size:0.75rem; font-family:var(--mono); background:var(--bg3); border:1px solid var(--border); border-radius:999px; padding:0.3rem 1rem; white-space:nowrap; opacity:0; pointer-events:none; transition:opacity .3s; z-index:300; }
-#sync-status.show { opacity:1; }
-#sync-status.ok  { color:var(--green); border-color:rgba(45,212,160,0.35); }
-#sync-status.err { color:var(--red);   border-color:rgba(240,96,96,0.35); }
-
-/* TABLET 640px+ */
+/* TABLET */
 @media(min-width:640px){
-  .app-body { padding:1.5rem 1.5rem calc(var(--nav-h) + var(--safe-b) + 1.5rem); max-width:960px; margin:0 auto; width:100%; }
+  .app-body { max-width:960px; margin:0 auto; padding:1.5rem 1.5rem calc(var(--nav-h) + var(--safe-b) + 1.5rem); }
   #card-list { display:grid; grid-template-columns:repeat(2,1fr); gap:10px; }
   .fc { align-self:start; }
   .app-header { padding:0 1.75rem; height:60px; }
   .stat .val { font-size:1.6rem; }
 }
-
-/* DESKTOP 1024px+ */
+/* DESKTOP */
 @media(min-width:1024px){
   .app-body { max-width:1100px; padding-left:2rem; padding-right:2rem; }
-  #card-list { grid-template-columns:repeat(2,1fr); gap:12px; }
   .app-header { padding:0 2rem; }
   .bottom-nav { max-width:600px; left:50%; right:auto; transform:translateX(-50%); border-left:1px solid var(--border); border-right:1px solid var(--border); border-radius:20px 20px 0 0; }
 }
-
-/* SMALL MOBILE 380px- */
+/* SMALL MOBILE */
 @media(max-width:380px){
-  .user-pill { display:none; }
   .stat .val { font-size:1.1rem; }
   .stat .lbl { font-size:0.58rem; }
   .fc-q { font-size:0.86rem; }
@@ -196,90 +139,66 @@ body { min-height:100%; overscroll-behavior:none; }
 </head>
 <body>
 
-<!-- AUTH -->
-<div id="auth-screen">
-  <div class="auth-wrap">
-    <div class="auth-logo">
-      <div class="auth-logo-icon">H</div>
-      <div class="auth-logo-text">HAAD <span>&#10022;</span></div>
-    </div>
-    <div class="auth-card">
-      <div class="auth-card-title">Welcome back</div>
-      <div class="auth-card-sub">100 PT Board flashcards &middot; synced across all devices</div>
-      <div class="auth-tabs">
-        <button class="auth-tab active" id="tab-login"  data-tab="login">Sign in</button>
-        <button class="auth-tab"        id="tab-signup" data-tab="signup">Register</button>
-      </div>
-      <div class="field"><label>Email</label><input type="email" id="auth-email" placeholder="you@example.com" autocomplete="email" /></div>
-      <div class="field"><label>Password</label><input type="password" id="auth-password" placeholder="&bull;&bull;&bull;&bull;&bull;&bull;&bull;&bull;" autocomplete="current-password" /></div>
-      <button class="btn-primary" id="auth-btn">Sign in</button>
-      <div class="auth-msg" id="auth-msg"></div>
-    </div>
-  </div>
+<!-- Sync info banner (shows once on first launch) -->
+<div id="sync-banner">
+  <p>Your device ID for syncing across devices:<br><span id="banner-id"></span></p>
+  <button class="banner-close" id="banner-close">Got it</button>
 </div>
 
-<!-- APP -->
-<div id="app-screen">
-  <header class="app-header">
-    <div class="header-logo">HAAD <span>&#10022;</span></div>
-    <div class="header-right">
-      <span class="user-pill" id="user-email-lbl"></span>
-      <button class="signout-btn" id="signout-btn">Sign out</button>
-    </div>
-  </header>
-
-  <div class="app-body">
-    <div class="stats">
-      <div class="stat"><div class="lbl">Total</div><div class="val" id="s-total">100</div></div>
-      <div class="stat"><div class="lbl">Showing</div><div class="val c-accent" id="s-showing">100</div></div>
-      <div class="stat"><div class="lbl">Revealed</div><div class="val c-green" id="s-revealed">0</div></div>
-      <div class="stat"><div class="lbl">Starred</div><div class="val c-amber" id="s-starred">0</div></div>
-    </div>
-
-    <div class="search-wrap">
-      <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-      <input type="search" id="search" placeholder="Search questions or answers&hellip;" autocomplete="off" />
-    </div>
-
-    <div class="action-row">
-      <button class="apill" id="reveal-btn">
-        <svg viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
-        Reveal all
-      </button>
-      <button class="apill" id="star-filter-btn">
-        <svg viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
-        Starred
-      </button>
-      <button class="apill" id="shuffle-btn">
-        <svg viewBox="0 0 24 24"><polyline points="16 3 21 3 21 8"/><line x1="4" y1="20" x2="21" y2="3"/><polyline points="21 16 21 21 16 21"/><line x1="15" y1="15" x2="21" y2="21"/></svg>
-        Shuffle
-      </button>
-    </div>
-
-    <div id="card-list"></div>
+<header class="app-header">
+  <div class="header-logo">HAAD <span>&#10022;</span></div>
+  <div class="header-right">
+    <div class="header-count" id="header-count">100 cards</div>
+    <div class="sync-dot" id="sync-dot" title="Sync status"></div>
   </div>
+</header>
 
-  <nav class="bottom-nav">
-    <button class="nav-btn active" id="nav-all">
-      <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
-      All
+<div class="app-body">
+  <div class="stats">
+    <div class="stat"><div class="lbl">Total</div><div class="val" id="s-total">100</div></div>
+    <div class="stat"><div class="lbl">Showing</div><div class="val ca" id="s-showing">100</div></div>
+    <div class="stat"><div class="lbl">Revealed</div><div class="val cg" id="s-revealed">0</div></div>
+    <div class="stat"><div class="lbl">Starred</div><div class="val co" id="s-starred">0</div></div>
+  </div>
+  <div class="search-wrap">
+    <svg class="search-icon" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+    <input type="search" id="search" placeholder="Search questions or answers&hellip;" autocomplete="off" />
+  </div>
+  <div class="action-row">
+    <button class="apill" id="reveal-btn">
+      <svg viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+      Reveal all
     </button>
-    <button class="nav-btn" id="nav-starred">
+    <button class="apill" id="star-filter-btn">
       <svg viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
       Starred
     </button>
-    <button class="nav-btn" id="nav-revealed">
-      <svg viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
-      Revealed
-    </button>
-    <button class="nav-btn" id="nav-shuffle">
+    <button class="apill" id="shuffle-btn">
       <svg viewBox="0 0 24 24"><polyline points="16 3 21 3 21 8"/><line x1="4" y1="20" x2="21" y2="3"/><polyline points="21 16 21 21 16 21"/><line x1="15" y1="15" x2="21" y2="21"/></svg>
       Shuffle
     </button>
-  </nav>
+  </div>
+  <div id="card-list"></div>
 </div>
 
-<div id="sync-status"></div>
+<nav class="bottom-nav">
+  <button class="nav-btn active" id="nav-all">
+    <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+    All
+  </button>
+  <button class="nav-btn" id="nav-starred">
+    <svg viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+    Starred
+  </button>
+  <button class="nav-btn" id="nav-revealed">
+    <svg viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+    Revealed
+  </button>
+  <button class="nav-btn" id="nav-shuffle">
+    <svg viewBox="0 0 24 24"><polyline points="16 3 21 3 21 8"/><line x1="4" y1="20" x2="21" y2="3"/><polyline points="21 16 21 21 16 21"/><line x1="15" y1="15" x2="21" y2="21"/></svg>
+    Shuffle
+  </button>
+</nav>
 
 <script>
 var SUPABASE_URL      = "https://ndhqnhiiapquykphclmo.supabase.co";
@@ -388,41 +307,101 @@ var RAW = [
   {q:"A 12-year-old is referred for treatment of patellar tendinitis. The patient is unable to hop on the affected lower extremity because of pain and is sent for an x-ray. The therapist's initial intervention should focus on:",a:"Iontophoresis using dexamethasone and patient education regarding avoidance of squatting and jumping activities"}
 ];
 
-var userId = null;
-var cards = RAW.map(function(c,i){ return {q:c.q,a:c.a,id:i,revealed:false,starred:false}; });
+/* ── DEVICE ID ──
+   A unique ID generated once and stored in localStorage.
+   This is the "user" identifier in Supabase — no login needed.
+   To sync a new device, copy the ID from the banner and paste it
+   into localStorage under the key 'haad_device_id'. */
+function getDeviceId() {
+  var id = localStorage.getItem('haad_device_id');
+  if (!id) {
+    id = 'dev_' + Date.now().toString(36) + '_' + Math.random().toString(36).slice(2, 9);
+    localStorage.setItem('haad_device_id', id);
+  }
+  return id;
+}
+
+var sb        = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+var deviceId  = getDeviceId();
+var cards     = RAW.map(function(c,i){ return {q:c.q,a:c.a,id:i,revealed:false,starred:false}; });
 var allRevealed = false;
 var starFilter  = false;
 var revFilter   = false;
-var currentTab  = 'login';
 var syncTimer;
 
-/* Initialise Supabase immediately — the CDN script is already parsed
-   because this <script> block comes after it in the HTML */
-var sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+/* ── SYNC STATUS DOT ── */
+function setDot(state) {
+  var dot = document.getElementById('sync-dot');
+  if (!dot) return;
+  dot.className = 'sync-dot' + (state ? ' '+state : '');
+}
 
-/* BOOT — wire all UI events as soon as the DOM is ready */
+/* ── LOAD STARS FROM SUPABASE ── */
+function loadStars() {
+  setDot('busy');
+  sb.from('device_stars')
+    .select('question_id')
+    .eq('device_id', deviceId)
+    .then(function(res) {
+      if (res.error) { console.error(res.error); setDot('err'); fallbackLocal(); return; }
+      var ids = {};
+      res.data.forEach(function(r){ ids[r.question_id] = true; });
+      cards.forEach(function(c){ c.starred = !!ids[c.id]; });
+      setDot('ok');
+      render();
+      setTimeout(function(){ setDot(''); }, 2000);
+    });
+}
+
+/* ── SAVE STAR TO SUPABASE ── */
+function saveStar(card) {
+  setDot('busy');
+  clearTimeout(syncTimer);
+  syncTimer = setTimeout(function() {
+    if (card.starred) {
+      sb.from('device_stars')
+        .upsert({ device_id: deviceId, question_id: card.id }, { onConflict: 'device_id,question_id' })
+        .then(function(r){ setDot(r.error ? 'err' : 'ok'); setTimeout(function(){ setDot(''); },2000); });
+    } else {
+      sb.from('device_stars')
+        .delete()
+        .eq('device_id', deviceId)
+        .eq('question_id', card.id)
+        .then(function(r){ setDot(r.error ? 'err' : 'ok'); setTimeout(function(){ setDot(''); },2000); });
+    }
+    /* always mirror to localStorage as offline backup */
+    var starred = cards.filter(function(c){ return c.starred; }).map(function(c){ return c.id; });
+    try { localStorage.setItem('haad_stars_backup', JSON.stringify(starred)); } catch(e){}
+  }, 300);
+}
+
+/* ── OFFLINE FALLBACK ── */
+function fallbackLocal() {
+  try {
+    var saved = JSON.parse(localStorage.getItem('haad_stars_backup') || '[]');
+    var ids = {};
+    saved.forEach(function(id){ ids[id]=true; });
+    cards.forEach(function(c){ c.starred = !!ids[c.id]; });
+    render();
+  } catch(e){}
+}
+
+/* ── BOOT ── */
 document.addEventListener('DOMContentLoaded', function() {
+  loadStars();
+  render();
 
-  /* Check for existing session */
-  sb.auth.getSession().then(function(res) {
-    var session = res.data && res.data.session;
-    if (session) { userId = session.user.id; showApp(session.user.email); loadStars(); }
+  /* Show device ID banner once on first ever launch */
+  var seen = localStorage.getItem('haad_banner_seen');
+  if (!seen) {
+    document.getElementById('banner-id').textContent = deviceId;
+    document.getElementById('sync-banner').classList.add('show');
+  }
+  document.getElementById('banner-close').addEventListener('click', function() {
+    document.getElementById('sync-banner').classList.remove('show');
+    localStorage.setItem('haad_banner_seen', '1');
   });
-  sb.auth.onAuthStateChange(function(_e, session) {
-    if (session) { userId = session.user.id; showApp(session.user.email); loadStars(); }
-    else { userId = null; showAuth(); }
-  });
 
-  /* Auth tabs — buttons fire click reliably on all devices */
-  document.getElementById('tab-login').addEventListener('click', function() { switchTab('login'); });
-  document.getElementById('tab-signup').addEventListener('click', function() { switchTab('signup'); });
-
-  /* Sign-in button — touch-action:manipulation in CSS kills the 300ms delay,
-     so a plain click listener works perfectly on mobile and desktop */
-  document.getElementById('auth-btn').addEventListener('click', doAuth);
-
-  /* All other buttons */
-  document.getElementById('signout-btn').addEventListener('click', signOut);
   document.getElementById('search').addEventListener('input', render);
   document.getElementById('reveal-btn').addEventListener('click', toggleRevealAll);
   document.getElementById('star-filter-btn').addEventListener('click', toggleStarFilter);
@@ -430,99 +409,28 @@ document.addEventListener('DOMContentLoaded', function() {
   document.getElementById('nav-all').addEventListener('click', function(){ setNav('all'); });
   document.getElementById('nav-starred').addEventListener('click', function(){ setNav('starred'); });
   document.getElementById('nav-revealed').addEventListener('click', function(){ setNav('revealed'); });
-  document.getElementById('nav-shuffle').addEventListener('click', function(){ shuffleCards(); highlightNavBtn('nav-shuffle'); });
+  document.getElementById('nav-shuffle').addEventListener('click', function(){ shuffleCards(); flashNav('nav-shuffle'); });
 });
 
-/* AUTH */
-function switchTab(t) {
-  currentTab = t;
-  document.getElementById('tab-login').classList.toggle('active', t==='login');
-  document.getElementById('tab-signup').classList.toggle('active', t==='signup');
-  document.getElementById('auth-btn').textContent = t==='login' ? 'Sign in' : 'Create account';
-  setMsg('','');
-}
-function setMsg(text, type) {
-  var el = document.getElementById('auth-msg');
-  el.textContent = text;
-  el.className = 'auth-msg' + (type ? ' '+type : '');
-}
-function doAuth() {
-  var email    = document.getElementById('auth-email').value.trim();
-  var password = document.getElementById('auth-password').value;
-  var btn      = document.getElementById('auth-btn');
-  if (!email || !password) { setMsg('Please fill in both fields.','error'); return; }
-  btn.disabled = true; btn.textContent = 'Please wait…';
-  if (currentTab === 'login') {
-    sb.auth.signInWithPassword({email:email,password:password}).then(function(res){
-      btn.disabled=false; btn.textContent='Sign in';
-      if (res.error) setMsg(res.error.message,'error');
-    });
-  } else {
-    sb.auth.signUp({email:email,password:password}).then(function(res){
-      btn.disabled=false; btn.textContent='Create account';
-      if (res.error) { setMsg(res.error.message,'error'); return; }
-      if (res.data && res.data.session) { setMsg('',''); }
-      else { setMsg('Check your email to confirm, then sign in.','success'); }
-    });
-  }
-}
-function signOut() { sb.auth.signOut(); }
-function showAuth() {
-  document.getElementById('auth-screen').style.display='flex';
-  document.getElementById('app-screen').classList.remove('active');
-}
-function showApp(email) {
-  document.getElementById('auth-screen').style.display='none';
-  document.getElementById('app-screen').classList.add('active');
-  document.getElementById('user-email-lbl').textContent=email;
-  render();
-}
-
-/* SYNC */
-function loadStars() {
-  sb.from('stars').select('question_id').eq('user_id',userId).then(function(res){
-    if (res.error) { console.error(res.error); return; }
-    var ids={};
-    res.data.forEach(function(r){ ids[r.question_id]=true; });
-    cards.forEach(function(c){ c.starred=!!ids[c.id]; });
-    render();
-  });
-}
-function flashSync(state) {
-  var el=document.getElementById('sync-status');
-  el.textContent=state==='ok'?'✓ synced':'⚠ sync error';
-  el.className='show '+state;
-  clearTimeout(syncTimer);
-  syncTimer=setTimeout(function(){ el.className=''; },2000);
-}
-function saveStar(card) {
-  if (!userId) return;
-  if (card.starred) {
-    sb.from('stars').upsert({user_id:userId,question_id:card.id},{onConflict:'user_id,question_id'}).then(function(r){ flashSync(r.error?'err':'ok'); });
-  } else {
-    sb.from('stars').delete().eq('user_id',userId).eq('question_id',card.id).then(function(r){ flashSync(r.error?'err':'ok'); });
-  }
-}
-
-/* NAV */
+/* ── NAV ── */
 function setNav(tab) {
   starFilter = (tab==='starred');
   revFilter  = (tab==='revealed');
-  ['all','starred','revealed'].forEach(function(t){
+  ['all','starred','revealed','shuffle'].forEach(function(t){
     var el=document.getElementById('nav-'+t);
     if(el) el.classList.toggle('active', t===tab);
   });
   document.getElementById('star-filter-btn').classList.toggle('amber-on', starFilter);
   render();
 }
-function highlightNavBtn(id) {
-  var nb=document.getElementById(id);
-  if(!nb) return;
-  nb.classList.add('active');
-  setTimeout(function(){ nb.classList.remove('active'); },400);
+function flashNav(id) {
+  var el=document.getElementById(id);
+  if(!el) return;
+  el.classList.add('active');
+  setTimeout(function(){ el.classList.remove('active'); }, 400);
 }
 
-/* CONTROLS */
+/* ── CONTROLS ── */
 function toggleRevealAll() {
   allRevealed=!allRevealed;
   cards.forEach(function(c){ c.revealed=allRevealed; });
@@ -534,8 +442,7 @@ function toggleRevealAll() {
   render();
 }
 function toggleStarFilter() {
-  starFilter=!starFilter;
-  revFilter=false;
+  starFilter=!starFilter; revFilter=false;
   document.getElementById('star-filter-btn').classList.toggle('amber-on',starFilter);
   var tab=starFilter?'starred':'all';
   ['all','starred','revealed'].forEach(function(t){
@@ -555,26 +462,26 @@ function toggleCard(id) {
   for(var i=0;i<cards.length;i++){ if(cards[i].id===id){ cards[i].revealed=!cards[i].revealed; break; } }
   render();
 }
-function toggleStar(id, e) {
-  e.stopPropagation();
-  for(var i=0;i<cards.length;i++){ if(cards[i].id===id){ cards[i].starred=!cards[i].starred; saveStar(cards[i]); break; } }
+function toggleStar(id) {
+  var card;
+  for(var i=0;i<cards.length;i++){ if(cards[i].id===id){ cards[i].starred=!cards[i].starred; card=cards[i]; break; } }
+  if(card) saveStar(card);
   render();
 }
 
-/* RENDER */
+/* ── RENDER ── */
 function render() {
-  var searchEl=document.getElementById('search');
-  var q=searchEl?searchEl.value.toLowerCase():'';
+  var q=(document.getElementById('search')||{value:''}).value.toLowerCase();
   var visible=cards.filter(function(c){
-    var mq=!q||c.q.toLowerCase().indexOf(q)>=0||c.a.toLowerCase().indexOf(q)>=0;
-    var ms=!starFilter||c.starred;
-    var mr=!revFilter||c.revealed;
-    return mq&&ms&&mr;
+    return (!q||c.q.toLowerCase().indexOf(q)>=0||c.a.toLowerCase().indexOf(q)>=0)
+        && (!starFilter||c.starred)
+        && (!revFilter||c.revealed);
   });
   document.getElementById('s-total').textContent    = cards.length;
   document.getElementById('s-showing').textContent  = visible.length;
   document.getElementById('s-revealed').textContent = cards.filter(function(c){return c.revealed;}).length;
   document.getElementById('s-starred').textContent  = cards.filter(function(c){return c.starred;}).length;
+  document.getElementById('header-count').textContent = visible.length+' / '+cards.length;
 
   var list=document.getElementById('card-list');
   if(!list) return;
@@ -601,26 +508,17 @@ function render() {
       +'</div>';
   }
   list.innerHTML=html;
-
-  /* event delegation — no inline onclick needed */
   list.onclick=function(e){
     var starEl=e.target.closest('.star-btn');
-    if(starEl){ e.stopPropagation(); toggleStar(parseInt(starEl.dataset.sid),e); return; }
+    if(starEl){ e.stopPropagation(); toggleStar(parseInt(starEl.dataset.sid)); return; }
     var card=e.target.closest('.fc');
     if(card) toggleCard(parseInt(card.dataset.id));
   };
 }
 </script>
-
 <script>
-if ('serviceWorker' in navigator) {
-  window.addEventListener('load', function() {
-    navigator.serviceWorker.register('sw.js').then(function(reg) {
-      console.log('SW registered:', reg.scope);
-    }).catch(function(err) {
-      console.log('SW registration failed:', err);
-    });
-  });
+if('serviceWorker' in navigator){
+  window.addEventListener('load',function(){ navigator.serviceWorker.register('sw.js'); });
 }
 </script>
 </body>
