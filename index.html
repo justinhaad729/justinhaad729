@@ -90,10 +90,19 @@ body { min-height:100%; overscroll-behavior:none; }
 .apill.amber-on { background:rgba(245,166,35,0.1); border-color:var(--amber); color:var(--amber); }
 
 /* BOOK TABS */
-.book-tabs { display:flex; background:var(--bg3); border-radius:var(--r); padding:3px; gap:3px; margin-bottom:1.1rem; }
+.book-tabs { display:flex; background:var(--bg3); border-radius:var(--r); padding:3px; gap:3px; margin-bottom:0.5rem; }
 .book-tab { flex:1; text-align:center; padding:0.45rem 0.5rem; border-radius:calc(var(--r) - 2px); font-size:0.8rem; color:var(--muted); cursor:pointer; transition:background .18s,color .18s; user-select:none; background:none; border:none; font-family:var(--font); white-space:nowrap; touch-action:manipulation; -webkit-appearance:none; }
 .book-tab.active { background:var(--bg4); color:var(--text); font-weight:600; }
 .book-tab .tab-count { font-size:0.65rem; font-family:var(--mono); opacity:0.6; margin-left:4px; }
+
+/* SET TABS (sub-tabs under Siegelmann) */
+.set-tabs { display:none; gap:6px; margin-bottom:1.1rem; }
+.set-tabs.show { display:flex; }
+.set-tab { display:inline-flex; align-items:center; gap:5px; height:32px; padding:0 12px; background:var(--bg2); border:1px solid var(--border); border-radius:999px; color:var(--muted); font-family:var(--font); font-size:0.78rem; cursor:pointer; white-space:nowrap; touch-action:manipulation; -webkit-appearance:none; appearance:none; transition:background .15s,border-color .15s,color .15s; }
+.set-tab.active { background:var(--accentbg); border-color:var(--accent); color:var(--accent2); font-weight:600; }
+.set-tab .tab-count { font-size:0.65rem; font-family:var(--mono); opacity:0.7; }
+#set-tabs-wrap { display:none; }
+#set-tabs-wrap.visible { display:flex; }
 
 /* CARDS */
 #card-list { display:flex; flex-direction:column; gap:8px; }
@@ -182,6 +191,12 @@ body { min-height:100%; overscroll-behavior:none; }
     <button class="book-tab active" id="book-all">All <span class="tab-count" id="count-all"></span></button>
     <button class="book-tab" id="book-siegelmann">Siegelmann <span class="tab-count" id="count-sieg"></span></button>
     <button class="book-tab" id="book-giles">Giles <span class="tab-count" id="count-giles"></span></button>
+  </div>
+
+  <div id="set-tabs-wrap" class="set-tabs">
+    <button class="set-tab active" id="set-all">All Sets <span class="tab-count" id="count-set-all"></span></button>
+    <button class="set-tab" id="set-a">Set A <span class="tab-count" id="count-set-a">1–200</span></button>
+    <button class="set-tab" id="set-b">Set B <span class="tab-count" id="count-set-b">201–399</span></button>
   </div>
 
   <div class="action-row">
@@ -647,6 +662,7 @@ var allRevealed = false;
 var starFilter  = false;
 var revFilter   = false;
 var activeBook  = 'all';
+var activeSet   = 'all';
 var syncTimer;
 
 /* ── SYNC STATUS DOT ── */
@@ -726,6 +742,12 @@ document.addEventListener('DOMContentLoaded', function() {
   document.getElementById('book-all').addEventListener('click', function(){ setBook('all'); });
   document.getElementById('book-siegelmann').addEventListener('click', function(){ setBook('siegelmann'); });
   document.getElementById('book-giles').addEventListener('click', function(){ setBook('giles'); });
+  document.getElementById('set-all').addEventListener('click', function(){ setSet('all'); });
+  document.getElementById('set-a').addEventListener('click', function(){ setSet('a'); });
+  document.getElementById('set-b').addEventListener('click', function(){ setSet('b'); });
+  document.getElementById('set-all').addEventListener('click', function(){ setSet('all'); });
+  document.getElementById('set-a').addEventListener('click', function(){ setSet('a'); });
+  document.getElementById('set-b').addEventListener('click', function(){ setSet('b'); });
   document.getElementById('reveal-btn').addEventListener('click', toggleRevealAll);
   document.getElementById('star-filter-btn').addEventListener('click', toggleStarFilter);
   document.getElementById('shuffle-btn').addEventListener('click', shuffleCards);
@@ -754,17 +776,40 @@ function flashNav(id) {
 }
 function setBook(book) {
   activeBook = book;
+  activeSet  = 'all'; /* reset set filter when switching books */
   ['all','siegelmann','giles'].forEach(function(b){
     var el = document.getElementById('book-'+b);
     if(el) el.classList.toggle('active', b===book);
+  });
+  /* show set tabs only when Siegelmann is active */
+  var wrap = document.getElementById('set-tabs-wrap');
+  if(wrap) wrap.classList.toggle('visible', book==='siegelmann');
+  /* reset set tab highlight */
+  ['all','a','b'].forEach(function(s){
+    var el = document.getElementById('set-'+s);
+    if(el) el.classList.toggle('active', s==='all');
+  });
+  render();
+}
+function setSet(set) {
+  activeSet = set;
+  ['all','a','b'].forEach(function(s){
+    var el = document.getElementById('set-'+s);
+    if(el) el.classList.toggle('active', s===set);
   });
   render();
 }
 
 /* ── CONTROLS ── */
+function getActiveCards() {
+  var bookCards = activeBook==='all' ? cards : cards.filter(function(c){return c.book===activeBook;});
+  if(activeBook==='siegelmann' && activeSet==='a') return bookCards.filter(function(c){return c.id<200;});
+  if(activeBook==='siegelmann' && activeSet==='b') return bookCards.filter(function(c){return c.id>=200;});
+  return bookCards;
+}
 function toggleRevealAll() {
   allRevealed=!allRevealed;
-  var target = activeBook==='all' ? cards : cards.filter(function(c){return c.book===activeBook;});
+  var target = getActiveCards();
   target.forEach(function(c){ c.revealed=allRevealed; });
   var btn=document.getElementById('reveal-btn');
   btn.classList.toggle('on',allRevealed);
@@ -784,9 +829,7 @@ function toggleStarFilter() {
   render();
 }
 function shuffleCards() {
-  /* shuffle only within the active book view */
-  var target = activeBook==='all' ? cards : cards.filter(function(c){return c.book===activeBook;});
-  /* Fisher-Yates on the target slice */
+  var target = getActiveCards();
   for(var i=target.length-1;i>0;i--){
     var j=Math.floor(Math.random()*(i+1));
     var tmp=target[i]; target[i]=target[j]; target[j]=tmp;
@@ -808,12 +851,21 @@ function toggleStar(id) {
 function render() {
   var q=(document.getElementById('search')||{value:''}).value.toLowerCase();
   var bookCards = activeBook==='all' ? cards : cards.filter(function(c){ return c.book===activeBook; });
-  var visible=bookCards.filter(function(c){
+  /* apply set filter (only meaningful when Siegelmann is active) */
+  var setCards;
+  if(activeBook==='siegelmann' && activeSet==='a'){
+    setCards = bookCards.filter(function(c){ return c.id < 200; });
+  } else if(activeBook==='siegelmann' && activeSet==='b'){
+    setCards = bookCards.filter(function(c){ return c.id >= 200; });
+  } else {
+    setCards = bookCards;
+  }
+  var visible=setCards.filter(function(c){
     return (!q||c.q.toLowerCase().indexOf(q)>=0||c.a.toLowerCase().indexOf(q)>=0)
         && (!starFilter||c.starred)
         && (!revFilter||c.revealed);
   });
-  /* tab counts */
+  /* book tab counts */
   var sCount = cards.filter(function(c){return c.book==='siegelmann';}).length;
   var gCount = cards.filter(function(c){return c.book==='giles';}).length;
   var cAll = document.getElementById('count-all');
@@ -822,11 +874,15 @@ function render() {
   if(cAll) cAll.textContent = cards.length;
   if(cSieg) cSieg.textContent = sCount;
   if(cGiles) cGiles.textContent = gCount;
-  document.getElementById('s-total').textContent    = bookCards.length;
+  /* set tab counts */
+  var siegCards = cards.filter(function(c){return c.book==='siegelmann';});
+  var cSetAll = document.getElementById('count-set-all');
+  if(cSetAll) cSetAll.textContent = sCount;
+  document.getElementById('s-total').textContent    = setCards.length;
   document.getElementById('s-showing').textContent  = visible.length;
-  document.getElementById('s-revealed').textContent = bookCards.filter(function(c){return c.revealed;}).length;
-  document.getElementById('s-starred').textContent  = bookCards.filter(function(c){return c.starred;}).length;
-  document.getElementById('header-count').textContent = visible.length+' / '+bookCards.length;
+  document.getElementById('s-revealed').textContent = setCards.filter(function(c){return c.revealed;}).length;
+  document.getElementById('s-starred').textContent  = setCards.filter(function(c){return c.starred;}).length;
+  document.getElementById('header-count').textContent = visible.length+' / '+setCards.length;
 
   var list=document.getElementById('card-list');
   if(!list) return;
